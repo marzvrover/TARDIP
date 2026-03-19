@@ -14,6 +14,7 @@ import {
   PolylineGlowMaterialProperty,
   EllipsoidTerrainProvider,
   Ion,
+  UrlTemplateImageryProvider,
 } from 'cesium';
 import type { Entity } from 'cesium';
 
@@ -80,13 +81,16 @@ export function placeOriginMarker(lat: number, lon: number, label: string): void
     },
     label: {
       text: label,
-      font: '14px system-ui, sans-serif',
+      font: 'bold 15px system-ui, sans-serif',
       fillColor: Color.WHITE,
       style: LabelStyle.FILL_AND_OUTLINE,
-      outlineWidth: 2,
+      outlineWidth: 3,
       outlineColor: Color.BLACK,
       verticalOrigin: VerticalOrigin.BOTTOM,
-      pixelOffset: new Cartesian2(0, -18),
+      pixelOffset: new Cartesian2(0, -20),
+      showBackground: true,
+      backgroundColor: new Color(0, 0, 0, 0.6),
+      backgroundPadding: new Cartesian2(8, 5),
     },
   });
 }
@@ -102,13 +106,16 @@ export function placeAntipodeMarker(lat: number, lon: number, label: string): vo
     },
     label: {
       text: label,
-      font: '14px system-ui, sans-serif',
+      font: 'bold 15px system-ui, sans-serif',
       fillColor: Color.WHITE,
       style: LabelStyle.FILL_AND_OUTLINE,
-      outlineWidth: 2,
+      outlineWidth: 3,
       outlineColor: Color.BLACK,
       verticalOrigin: VerticalOrigin.BOTTOM,
-      pixelOffset: new Cartesian2(0, -18),
+      pixelOffset: new Cartesian2(0, -20),
+      showBackground: true,
+      backgroundColor: new Color(0, 0, 0, 0.6),
+      backgroundPadding: new Cartesian2(8, 5),
     },
   });
 }
@@ -176,6 +183,31 @@ export function zoomIn(): void {
 
 export function zoomOut(): void {
   viewer.camera.zoomOut(viewer.camera.positionCartographic.height * 0.6);
+}
+
+let isSatellite = false;
+
+export function toggleLayer(): boolean {
+  isSatellite = !isSatellite;
+  viewer.imageryLayers.removeAll();
+
+  if (isSatellite) {
+    viewer.imageryLayers.addImageryProvider(
+      new UrlTemplateImageryProvider({
+        url: 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
+        credit: 'Esri, Maxar, Earthstar Geographics',
+        maximumLevel: 19,
+      }),
+    );
+  } else {
+    viewer.imageryLayers.addImageryProvider(
+      new OpenStreetMapImageryProvider({
+        url: 'https://tile.openstreetmap.org/',
+      }),
+    );
+  }
+
+  return isSatellite;
 }
 
 export function onGlobeClick(

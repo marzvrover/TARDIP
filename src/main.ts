@@ -1,5 +1,5 @@
 import './style.css';
-import { initGlobe, clearMarkers, placeOriginMarker, placeAntipodeMarker, drawArc, flyTo, setView, onGlobeClick, zoomIn, zoomOut } from './globe';
+import { initGlobe, clearMarkers, placeOriginMarker, placeAntipodeMarker, drawArc, flyTo, setView, onGlobeClick, zoomIn, zoomOut, toggleLayer } from './globe';
 import { getAntipode } from './antipode';
 import { searchLocation, reverseGeocode, debounce } from './geocoding';
 import { getIPLocation, getCurrentLocation } from './geolocation';
@@ -128,6 +128,13 @@ async function init(): Promise<void> {
   // --- Zoom buttons ---
   document.getElementById('zoom-in-btn')!.addEventListener('click', zoomIn);
   document.getElementById('zoom-out-btn')!.addEventListener('click', zoomOut);
+
+  // --- Layer toggle ---
+  document.getElementById('layer-toggle-btn')!.addEventListener('click', () => {
+    const isSatellite = toggleLayer();
+    document.getElementById('layer-icon-satellite')!.style.display = isSatellite ? 'none' : 'block';
+    document.getElementById('layer-icon-map')!.style.display = isSatellite ? 'block' : 'none';
+  });
 
   // --- Default: IP geolocation ---
   try {

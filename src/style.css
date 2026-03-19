@@ -340,6 +340,36 @@ body {
   transform: scale(0.95);
 }
 
+/* ===== Layer Toggle ===== */
+#layer-toggle-btn {
+  position: absolute;
+  top: 172px;
+  right: 16px;
+  pointer-events: auto;
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  background: rgba(10, 10, 10, 0.75);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: background 0.2s, border-color 0.2s;
+}
+
+#layer-toggle-btn:hover {
+  background: rgba(30, 30, 30, 0.85);
+  border-color: rgba(100, 180, 255, 0.4);
+}
+
+#layer-toggle-btn:active {
+  transform: scale(0.95);
+}
+
 /* ===== Clickable Info Panel Sections ===== */
 .location-section.clickable {
   cursor: pointer;
@@ -377,6 +407,11 @@ body {
 
   #zoom-controls {
     top: 60px;
+    right: 8px;
+  }
+
+  #layer-toggle-btn {
+    top: 160px;
     right: 8px;
   }
 }
