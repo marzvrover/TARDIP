@@ -24,6 +24,18 @@ export function updateInfoPanel(
   const originNearest = getNearestSettlement(data.origin.address);
   const nearest = getNearestSettlement(data.antipode.address);
 
+  const originShort = getShortName(data.origin.name, data.origin.address);
+  const antipodeShort = getShortName(data.antipode.name, data.antipode.address);
+
+  const summary = document.getElementById('info-summary')!;
+  summary.innerHTML = `
+    <span class="dot origin-dot"></span>
+    <span class="summary-name">${escapeHtml(originShort)}</span>
+    <span class="summary-arrow">↔</span>
+    <span class="dot antipode-dot"></span>
+    <span class="summary-name">${escapeHtml(antipodeShort)}</span>
+  `;
+
   content.innerHTML = `
     <div class="location-section origin-section clickable" data-lat="${data.origin.lat}" data-lon="${data.origin.lon}">
       <div class="section-header">
@@ -110,4 +122,12 @@ function escapeHtml(text: string): string {
 
 function formatNumber(n: number): string {
   return n.toLocaleString(undefined, { maximumFractionDigits: 0 });
+}
+
+function getShortName(displayName: string, address: Record<string, string>): string {
+  const settlement = address.city || address.town || address.village || address.hamlet || address.suburb;
+  if (settlement) return settlement;
+  // Fall back to first segment of the display name
+  const first = displayName.split(',')[0]?.trim();
+  return first || 'Unknown';
 }

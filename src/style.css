@@ -210,8 +210,34 @@ body {
   display: none;
 }
 
+#info-summary {
+  display: none;
+  align-items: center;
+  gap: 6px;
+  padding-right: 28px;
+}
+
+#info-panel.collapsed #info-summary {
+  display: flex;
+}
+
+.summary-name {
+  font-size: 13px;
+  color: rgba(255, 255, 255, 0.85);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 120px;
+}
+
+.summary-arrow {
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.35);
+  flex-shrink: 0;
+}
+
 #info-panel.collapsed {
-  padding: 8px 20px;
+  padding: 10px 20px;
 }
 
 @keyframes fadeSlideUp {
