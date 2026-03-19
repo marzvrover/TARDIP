@@ -120,6 +120,34 @@ export function placeAntipodeMarker(lat: number, lon: number, label: string): vo
   });
 }
 
+// Helpers for spherical interpolation (great-circle arc)
+
+function latLonToUnitCart(latRad: number, lonRad: number): Cartesian3 {
+  return new Cartesian3(
+    Math.cos(latRad) * Math.cos(lonRad),
+    Math.cos(latRad) * Math.sin(lonRad),
+    Math.sin(latRad),
+  );
+}
+
+function slerp(a: Cartesian3, b: Cartesian3, t: number): Cartesian3 {
+  let d = Cartesian3.dot(a, b);
+  d = Math.max(-1, Math.min(1, d));
+  const theta = Math.acos(d);
+  if (theta < 1e-6) return Cartesian3.clone(a, new Cartesian3());
+  const sinTheta = Math.sin(theta);
+  const w1 = Math.sin((1 - t) * theta) / sinTheta;
+  const w2 = Math.sin(t * theta) / sinTheta;
+  const result = new Cartesian3();
+  Cartesian3.add(
+    Cartesian3.multiplyByScalar(a, w1, new Cartesian3()),
+    Cartesian3.multiplyByScalar(b, w2, new Cartesian3()),
+    result,
+  );
+  Cartesian3.normalize(result, result);
+  return result;
+}
+
 export function drawArc(
   fromLat: number,
   fromLon: number,
@@ -128,21 +156,52 @@ export function drawArc(
 ): void {
   const positions: Cartesian3[] = [];
   const steps = 200;
-  const maxAlt = 2_500_000; // 2500 km peak altitude
+  const maxAlt = 2_500_000;
 
-  // Determine shortest longitude path
-  let dLon = toLon - fromLon;
-  if (dLon > 180) dLon -= 360;
-  if (dLon < -180) dLon += 360;
+  const fromCart = latLonToUnitCart(CesiumMath.toRadians(fromLat), CesiumMath.toRadians(fromLon));
+  const toCart = latLonToUnitCart(CesiumMath.toRadians(toLat), CesiumMath.toRadians(toLon));
+
+  const dot = Math.max(-1, Math.min(1, Cartesian3.dot(fromCart, toCart)));
+  const isAntipodal = dot < -0.999;
+
+  // For nearly-antipodal points, pick a midpoint to define which great circle to follow
+  let midCart: Cartesian3 | null = null;
+  if (isAntipodal) {
+    let dLon = toLon - fromLon;
+    if (dLon > 180) dLon -= 360;
+    if (dLon < -180) dLon += 360;
+    const midLon = fromLon + dLon / 2;
+    const candidate = latLonToUnitCart(0, CesiumMath.toRadians(midLon));
+    const cross = Cartesian3.cross(fromCart, candidate, new Cartesian3());
+    if (Cartesian3.magnitude(cross) > 0.01) {
+      Cartesian3.normalize(candidate, candidate);
+      midCart = candidate;
+    } else {
+      const perp = Cartesian3.cross(fromCart, Cartesian3.UNIT_Z, new Cartesian3());
+      if (Cartesian3.magnitude(perp) < 0.01) {
+        Cartesian3.cross(fromCart, Cartesian3.UNIT_X, perp);
+      }
+      Cartesian3.normalize(perp, perp);
+      midCart = perp;
+    }
+  }
 
   for (let i = 0; i <= steps; i++) {
     const t = i / steps;
-    const lat = fromLat + (toLat - fromLat) * t;
-    let lon = fromLon + dLon * t;
-    if (lon > 180) lon -= 360;
-    if (lon < -180) lon += 360;
+    let point: Cartesian3;
+
+    if (isAntipodal && midCart) {
+      point = t <= 0.5
+        ? slerp(fromCart, midCart, t * 2)
+        : slerp(midCart, toCart, (t - 0.5) * 2);
+    } else {
+      point = slerp(fromCart, toCart, t);
+    }
+
+    const latDeg = CesiumMath.toDegrees(Math.asin(point.z));
+    const lonDeg = CesiumMath.toDegrees(Math.atan2(point.y, point.x));
     const alt = maxAlt * Math.sin(Math.PI * t);
-    positions.push(Cartesian3.fromDegrees(lon, lat, alt));
+    positions.push(Cartesian3.fromDegrees(lonDeg, latDeg, alt));
   }
 
   arcEntity = viewer.entities.add({
@@ -171,29 +230,7 @@ export async function flyTo(
   });
 }
 
-export async function flyAlongArc(
-  fromLat: number,
-  fromLon: number,
-  toLat: number,
-  toLon: number,
-  height: number = 8_000_000,
-): Promise<void> {
-  // Compute midpoint using the same shortest-longitude logic as drawArc
-  let dLon = toLon - fromLon;
-  if (dLon > 180) dLon -= 360;
-  if (dLon < -180) dLon += 360;
 
-  const midLat = (fromLat + toLat) / 2;
-  let midLon = fromLon + dLon / 2;
-  if (midLon > 180) midLon -= 360;
-  if (midLon < -180) midLon += 360;
-
-  // Fly: zoom out over origin → mid-arc waypoint → destination
-  await flyTo(fromLat, fromLon, 20_000_000);
-  await new Promise<void>((r) => setTimeout(r, 400));
-  await flyTo(midLat, midLon, 20_000_000);
-  await flyTo(toLat, toLon, height);
-}
 
 export function setView(lat: number, lon: number, height: number = 20_000_000): void {
   viewer.camera.setView({
