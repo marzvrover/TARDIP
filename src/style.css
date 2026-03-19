@@ -14,6 +14,7 @@ body {
   overflow: hidden;
   font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
   background: #000;
+  touch-action: manipulation;
 }
 
 #cesiumContainer {
@@ -29,14 +30,23 @@ body {
   z-index: 10;
 }
 
-/* ===== Search ===== */
-#search-container {
+/* ===== Top Bar (search + location btn) ===== */
+#top-bar {
   position: absolute;
   top: 16px;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 420px;
-  max-width: calc(100% - 80px);
+  left: 16px;
+  right: 16px;
+  display: flex;
+  gap: 8px;
+  align-items: flex-start;
+  pointer-events: none;
+}
+
+/* ===== Search ===== */
+#search-container {
+  flex: 1;
+  min-width: 0;
+  max-width: 420px;
   pointer-events: auto;
 }
 
@@ -119,10 +129,8 @@ body {
 
 /* ===== My Location Button ===== */
 #my-location-btn {
-  position: absolute;
-  top: 16px;
-  right: 16px;
   pointer-events: auto;
+  flex-shrink: 0;
   width: 44px;
   height: 44px;
   border-radius: 12px;
@@ -169,6 +177,41 @@ body {
 #info-panel.visible {
   display: block;
   animation: fadeSlideUp 0.3s ease-out;
+}
+
+#info-panel-toggle {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  width: 28px;
+  height: 28px;
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.06);
+  color: rgba(255, 255, 255, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s, transform 0.2s;
+  padding: 0;
+}
+
+#info-panel-toggle:hover {
+  background: rgba(255, 255, 255, 0.12);
+  color: rgba(255, 255, 255, 0.8);
+}
+
+#info-panel.collapsed #info-panel-toggle {
+  transform: rotate(180deg);
+}
+
+#info-panel.collapsed #info-content {
+  display: none;
+}
+
+#info-panel.collapsed {
+  padding: 8px 20px;
 }
 
 @keyframes fadeSlideUp {
@@ -321,6 +364,7 @@ body {
   justify-content: center;
   cursor: pointer;
   transition: background 0.2s, border-color 0.2s;
+  padding: 0;
 }
 
 #zoom-controls button:first-child {
@@ -386,6 +430,12 @@ body {
 
 /* ===== Responsive ===== */
 @media (max-width: 600px) {
+  #top-bar {
+    top: 8px;
+    left: 8px;
+    right: 8px;
+  }
+
   #info-panel {
     bottom: 8px;
     left: 8px;
@@ -395,14 +445,8 @@ body {
     padding: 16px;
   }
 
-  #search-container {
-    top: 8px;
-    max-width: calc(100% - 64px);
-  }
-
-  #my-location-btn {
-    top: 8px;
-    right: 8px;
+  #info-panel.collapsed {
+    padding: 8px 16px;
   }
 
   #zoom-controls {

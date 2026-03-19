@@ -136,6 +136,11 @@ async function init(): Promise<void> {
     document.getElementById('layer-icon-map')!.style.display = isSatellite ? 'block' : 'none';
   });
 
+  // --- Info panel toggle ---
+  document.getElementById('info-panel-toggle')!.addEventListener('click', () => {
+    document.getElementById('info-panel')!.classList.toggle('collapsed');
+  });
+
   // --- Default: IP geolocation ---
   try {
     showLoading(true);
