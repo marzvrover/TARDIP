@@ -216,6 +216,80 @@ export function drawArc(
   });
 }
 
+export function flyAlongArc(
+  fromLat: number,
+  fromLon: number,
+  toLat: number,
+  toLon: number,
+  height: number = 8_000_000,
+): Promise<void> {
+  return new Promise<void>((resolve) => {
+    const fromCart = latLonToUnitCart(CesiumMath.toRadians(fromLat), CesiumMath.toRadians(fromLon));
+    const toCart = latLonToUnitCart(CesiumMath.toRadians(toLat), CesiumMath.toRadians(toLon));
+
+    const dot = Math.max(-1, Math.min(1, Cartesian3.dot(fromCart, toCart)));
+    const isAntipodal = dot < -0.999;
+
+    let midCart: Cartesian3 | null = null;
+    if (isAntipodal) {
+      let dLon = toLon - fromLon;
+      if (dLon > 180) dLon -= 360;
+      if (dLon < -180) dLon += 360;
+      const midLon = fromLon + dLon / 2;
+      const candidate = latLonToUnitCart(0, CesiumMath.toRadians(midLon));
+      const cross = Cartesian3.cross(fromCart, candidate, new Cartesian3());
+      if (Cartesian3.magnitude(cross) > 0.01) {
+        Cartesian3.normalize(candidate, candidate);
+        midCart = candidate;
+      } else {
+        const perp = Cartesian3.cross(fromCart, Cartesian3.UNIT_Z, new Cartesian3());
+        if (Cartesian3.magnitude(perp) < 0.01) {
+          Cartesian3.cross(fromCart, Cartesian3.UNIT_X, perp);
+        }
+        Cartesian3.normalize(perp, perp);
+        midCart = perp;
+      }
+    }
+
+    function arcPoint(t: number): Cartesian3 {
+      if (isAntipodal && midCart) {
+        return t <= 0.5
+          ? slerp(fromCart, midCart, t * 2)
+          : slerp(midCart, toCart, (t - 0.5) * 2);
+      }
+      return slerp(fromCart, toCart, t);
+    }
+
+    const durationMs = 3000;
+    const maxHeight = Math.max(height * 2.5, 15_000_000);
+    const startTime = performance.now();
+
+    function tick() {
+      const raw = Math.min((performance.now() - startTime) / durationMs, 1);
+      const t = raw < 0.5
+        ? 4 * raw * raw * raw
+        : 1 - Math.pow(-2 * raw + 2, 3) / 2;
+
+      const pt = arcPoint(t);
+      const lat = CesiumMath.toDegrees(Math.asin(pt.z));
+      const lon = CesiumMath.toDegrees(Math.atan2(pt.y, pt.x));
+      const h = height + (maxHeight - height) * Math.sin(Math.PI * t);
+
+      viewer.camera.setView({
+        destination: Cartesian3.fromDegrees(lon, lat, h),
+      });
+
+      if (raw < 1) {
+        requestAnimationFrame(tick);
+      } else {
+        resolve();
+      }
+    }
+
+    requestAnimationFrame(tick);
+  });
+}
+
 export async function flyTo(
   lat: number,
   lon: number,

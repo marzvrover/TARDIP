@@ -1,5 +1,5 @@
 import './style.css';
-import { initGlobe, clearMarkers, placeOriginMarker, placeAntipodeMarker, drawArc, flyTo, setView, onGlobeClick, zoomIn, zoomOut, toggleLayer } from './globe';
+import { initGlobe, clearMarkers, placeOriginMarker, placeAntipodeMarker, drawArc, flyTo, flyAlongArc, setView, onGlobeClick, zoomIn, zoomOut, toggleLayer } from './globe';
 import { getAntipode } from './antipode';
 import { searchLocation, reverseGeocode, debounce } from './geocoding';
 import { getIPLocation, getCurrentLocation } from './geolocation';
@@ -59,7 +59,7 @@ async function handleLocation(lat: number, lon: number, name?: string): Promise<
       (lat, lon) => flyTo(lat, lon, 8_000_000),
     );
 
-    await flyTo(antipode.lat, antipode.lon, 8_000_000);
+    await flyAlongArc(lat, lon, antipode.lat, antipode.lon, 8_000_000);
   } finally {
     busy = false;
     showLoading(false);

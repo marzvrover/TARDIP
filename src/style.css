@@ -37,15 +37,13 @@ body {
   left: 16px;
   right: 16px;
   display: flex;
-  gap: 8px;
-  align-items: flex-start;
+  justify-content: center;
   pointer-events: none;
 }
 
 /* ===== Search ===== */
 #search-container {
-  flex: 1;
-  min-width: 0;
+  width: 100%;
   max-width: 420px;
   pointer-events: auto;
 }
@@ -129,8 +127,10 @@ body {
 
 /* ===== My Location Button ===== */
 #my-location-btn {
+  position: absolute;
+  top: 226px;
+  right: 16px;
   pointer-events: auto;
-  flex-shrink: 0;
   width: 44px;
   height: 44px;
   border-radius: 12px;
@@ -503,6 +503,11 @@ body {
 
   #layer-toggle-btn {
     top: 160px;
+    right: 8px;
+  }
+
+  #my-location-btn {
+    top: 214px;
     right: 8px;
   }
 }
