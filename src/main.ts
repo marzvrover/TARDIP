@@ -118,7 +118,7 @@ async function init(): Promise<void> {
     showLoading(true);
     try {
       const pos = await getCurrentLocation();
-      await handleLocation(pos.lat, pos.lon, 'My Location');
+      await handleLocation(pos.lat, pos.lon);
     } catch {
       console.warn('Could not determine location');
       showLoading(false);
@@ -140,7 +140,7 @@ async function init(): Promise<void> {
   try {
     showLoading(true);
     const pos = await getIPLocation();
-    await handleLocation(pos.lat, pos.lon, 'Your Location (estimated)');
+    await handleLocation(pos.lat, pos.lon);
   } catch {
     setView(20, 0, 25_000_000);
     showLoading(false);

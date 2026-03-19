@@ -46,13 +46,15 @@
       </div>
 
       <button id="layer-toggle-btn" title="Toggle satellite/map view">
-        <svg id="layer-icon-satellite" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="22" height="22">
-          <rect x="3" y="3" width="7" height="7" /><rect x="14" y="3" width="7" height="7" />
-          <rect x="3" y="14" width="7" height="7" /><rect x="14" y="14" width="7" height="7" />
+        <svg id="layer-icon-satellite" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" width="22" height="22">
+          <circle cx="12" cy="12" r="10" />
+          <path d="M2 12h20" />
+          <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z" />
         </svg>
-        <svg id="layer-icon-map" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="22" height="22" style="display:none">
-          <polygon points="1 6 1 22 8 18 16 22 23 18 23 2 16 6 8 2 1 6" />
-          <line x1="8" y1="2" x2="8" y2="18" /><line x1="16" y1="6" x2="16" y2="22" />
+        <svg id="layer-icon-map" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" width="22" height="22" style="display:none">
+          <path d="M3 7l6-3 6 3 6-3v13l-6 3-6-3-6 3V7z" />
+          <path d="M9 4v13" />
+          <path d="M15 7v13" />
         </svg>
       </button>
 

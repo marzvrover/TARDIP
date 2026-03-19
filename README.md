@@ -12,7 +12,8 @@ A 3D globe webapp that lets you explore antipodal points on Earth — the spot d
 - 🎯 **Antipode Visualization** — Markers, glowing arc, and animated fly-to sequence
 - 🗺️ **Reverse Geocoding** — See what's at your antipode (nearest city/town or ocean name)
 - 📱 **Responsive** — Works on desktop and mobile browsers
-- 🔓 **Fully Open Source** — No API keys, no proprietary services
+- 🛰️ **Satellite View** — Toggle between street map and satellite imagery
+- 🔓 **Fully Open Source** — No API keys required, all dependencies properly licensed
 
 ## Tech Stack
 
@@ -21,6 +22,7 @@ A 3D globe webapp that lets you explore antipodal points on Earth — the spot d
 | Framework | Vanilla TypeScript + Vite |
 | 3D Globe | [CesiumJS](https://cesium.com/cesiumjs/) |
 | Map Tiles | [OpenStreetMap](https://www.openstreetmap.org/) |
+| Satellite Tiles | [Esri World Imagery](https://www.arcgis.com/home/item.html?id=10df2279f9684e4a9f6a7f08febac2a9) |
 | Geocoding | [Nominatim](https://nominatim.org/) |
 | IP Location | [ipapi.co](https://ipapi.co/) |
 | Hosting | GitHub Pages |
@@ -53,6 +55,33 @@ Fun facts:
 ## Deployment
 
 The app deploys automatically to GitHub Pages via GitHub Actions on push to `main`. The workflow builds the static site and publishes the `dist/` directory.
+
+## Licenses & Attributions
+
+This project uses the following open-source libraries and services:
+
+### Libraries
+
+| Library | License | Link |
+|---------|---------|------|
+| CesiumJS | Apache-2.0 | [github.com/CesiumGS/cesium](https://github.com/CesiumGS/cesium) |
+| Vite | MIT | [github.com/vitejs/vite](https://github.com/vitejs/vite) |
+| vite-plugin-cesium | MIT | [github.com/nshen/vite-plugin-cesium](https://github.com/nshen/vite-plugin-cesium) |
+| TypeScript | Apache-2.0 | [github.com/microsoft/TypeScript](https://github.com/microsoft/TypeScript) |
+
+### Tile Services
+
+| Service | Terms | Attribution |
+|---------|-------|-------------|
+| OpenStreetMap | [ODbL 1.0](https://www.openstreetmap.org/copyright) | © OpenStreetMap contributors |
+| Esri World Imagery | [Esri Master License Agreement](https://www.esri.com/en-us/legal/terms/full-master-agreement) | Esri, Maxar, Earthstar Geographics, and the GIS User Community |
+
+### APIs
+
+| Service | Terms | Notes |
+|---------|-------|-------|
+| Nominatim | [Usage Policy](https://operations.osmfoundation.org/policies/nominatim/) | Max 1 req/sec, requires User-Agent |
+| ipapi.co | [Terms of Service](https://ipapi.co/terms/) | Free tier: 1,000 requests/day |
 
 ## License
 
