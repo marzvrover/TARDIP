@@ -296,6 +296,64 @@ body {
   display: none !important;
 }
 
+/* ===== Zoom Controls ===== */
+#zoom-controls {
+  position: absolute;
+  top: 72px;
+  right: 16px;
+  pointer-events: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+#zoom-controls button {
+  width: 44px;
+  height: 44px;
+  border-radius: 0;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  background: rgba(10, 10, 10, 0.75);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: background 0.2s, border-color 0.2s;
+}
+
+#zoom-controls button:first-child {
+  border-radius: 12px 12px 0 0;
+}
+
+#zoom-controls button:last-child {
+  border-radius: 0 0 12px 12px;
+}
+
+#zoom-controls button:hover {
+  background: rgba(30, 30, 30, 0.85);
+  border-color: rgba(100, 180, 255, 0.4);
+}
+
+#zoom-controls button:active {
+  transform: scale(0.95);
+}
+
+/* ===== Clickable Info Panel Sections ===== */
+.location-section.clickable {
+  cursor: pointer;
+  border-radius: 8px;
+  padding: 8px;
+  margin: -8px;
+  margin-bottom: 4px;
+  transition: background 0.15s;
+}
+
+.location-section.clickable:hover {
+  background: rgba(255, 255, 255, 0.06);
+}
+
 /* ===== Responsive ===== */
 @media (max-width: 600px) {
   #info-panel {
@@ -314,6 +372,11 @@ body {
 
   #my-location-btn {
     top: 8px;
+    right: 8px;
+  }
+
+  #zoom-controls {
+    top: 60px;
     right: 8px;
   }
 }

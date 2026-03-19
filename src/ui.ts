@@ -1,36 +1,41 @@
-import type { SearchResult } from './geocoding';
 import type { Coordinates } from './antipode';
+import type { SearchResult } from './geocoding';
 import { formatCoords, surfaceDistance } from './antipode';
 import { getNearestSettlement } from './geocoding';
 
-export function updateInfoPanel(data: {
-  origin: { name: string; lat: number; lon: number };
-  antipode: {
-    name: string;
-    lat: number;
-    lon: number;
-    address: Record<string, string>;
-  };
-}): void {
+export function updateInfoPanel(
+  data: {
+    origin: { name: string; lat: number; lon: number; address: Record<string, string> };
+    antipode: {
+      name: string;
+      lat: number;
+      lon: number;
+      address: Record<string, string>;
+    };
+  },
+  onFlyTo?: (lat: number, lon: number) => void,
+): void {
   const panel = document.getElementById('info-panel')!;
   const content = document.getElementById('info-content')!;
 
   const o: Coordinates = { lat: data.origin.lat, lon: data.origin.lon };
   const a: Coordinates = { lat: data.antipode.lat, lon: data.antipode.lon };
   const dist = surfaceDistance(o, a);
+  const originNearest = getNearestSettlement(data.origin.address);
   const nearest = getNearestSettlement(data.antipode.address);
 
   content.innerHTML = `
-    <div class="location-section origin-section">
+    <div class="location-section origin-section clickable" data-lat="${data.origin.lat}" data-lon="${data.origin.lon}">
       <div class="section-header">
         <span class="dot origin-dot"></span>
         <h3>Origin</h3>
       </div>
       <p class="location-name">${escapeHtml(data.origin.name)}</p>
       <p class="location-coords">${formatCoords(data.origin.lat, data.origin.lon)}</p>
+      ${Object.keys(data.origin.address).length > 0 ? `<p class="nearest">Nearest place: <strong>${escapeHtml(originNearest)}</strong></p>` : ''}
     </div>
     <div class="divider"></div>
-    <div class="location-section antipode-section">
+    <div class="location-section antipode-section clickable" data-lat="${data.antipode.lat}" data-lon="${data.antipode.lon}">
       <div class="section-header">
         <span class="dot antipode-dot"></span>
         <h3>Antipode</h3>
@@ -45,6 +50,16 @@ export function updateInfoPanel(data: {
       <p>Through Earth: <strong>${formatNumber(12_742)} km</strong> (diameter)</p>
     </div>
   `;
+
+  if (onFlyTo) {
+    content.querySelectorAll('.location-section.clickable').forEach((el) => {
+      el.addEventListener('click', () => {
+        const lat = parseFloat((el as HTMLElement).dataset.lat || '0');
+        const lon = parseFloat((el as HTMLElement).dataset.lon || '0');
+        onFlyTo(lat, lon);
+      });
+    });
+  }
 
   panel.classList.add('visible');
 }

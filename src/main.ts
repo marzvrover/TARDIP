@@ -1,5 +1,5 @@
 import './style.css';
-import { initGlobe, clearMarkers, placeOriginMarker, placeAntipodeMarker, drawArc, flyTo, setView, onGlobeClick } from './globe';
+import { initGlobe, clearMarkers, placeOriginMarker, placeAntipodeMarker, drawArc, flyTo, setView, onGlobeClick, zoomIn, zoomOut } from './globe';
 import { getAntipode } from './antipode';
 import { searchLocation, reverseGeocode, debounce } from './geocoding';
 import { getIPLocation, getCurrentLocation } from './geolocation';
@@ -15,7 +15,19 @@ async function handleLocation(lat: number, lon: number, name?: string): Promise<
   try {
     clearMarkers();
 
-    const originName = name || `${lat.toFixed(4)}, ${lon.toFixed(4)}`;
+    // Reverse-geocode the origin if no name was provided
+    let originName = name || `${lat.toFixed(4)}, ${lon.toFixed(4)}`;
+    let originAddress: Record<string, string> = {};
+    if (!name) {
+      try {
+        const originInfo = await reverseGeocode(lat, lon);
+        originName = originInfo.displayName;
+        originAddress = originInfo.address;
+      } catch {
+        // keep coordinate-based name
+      }
+    }
+
     placeOriginMarker(lat, lon, originName);
 
     const antipode = getAntipode({ lat, lon });
@@ -34,15 +46,18 @@ async function handleLocation(lat: number, lon: number, name?: string): Promise<
     placeAntipodeMarker(antipode.lat, antipode.lon, 'Antipode');
     drawArc(lat, lon, antipode.lat, antipode.lon);
 
-    updateInfoPanel({
-      origin: { name: originName, lat, lon },
-      antipode: {
-        name: antipodeName,
-        lat: antipode.lat,
-        lon: antipode.lon,
-        address: antipodeAddress,
+    updateInfoPanel(
+      {
+        origin: { name: originName, lat, lon, address: originAddress },
+        antipode: {
+          name: antipodeName,
+          lat: antipode.lat,
+          lon: antipode.lon,
+          address: antipodeAddress,
+        },
       },
-    });
+      (lat, lon) => flyTo(lat, lon, 8_000_000),
+    );
 
     // Animated fly-to: zoom out → fly to antipode
     await flyTo(lat, lon, 20_000_000);
@@ -109,6 +124,10 @@ async function init(): Promise<void> {
       showLoading(false);
     }
   });
+
+  // --- Zoom buttons ---
+  document.getElementById('zoom-in-btn')!.addEventListener('click', zoomIn);
+  document.getElementById('zoom-out-btn')!.addEventListener('click', zoomOut);
 
   // --- Default: IP geolocation ---
   try {

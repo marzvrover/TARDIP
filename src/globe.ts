@@ -77,7 +77,6 @@ export function placeOriginMarker(lat: number, lon: number, label: string): void
       color: Color.DODGERBLUE,
       outlineColor: Color.WHITE,
       outlineWidth: 2,
-      disableDepthTestDistance: Number.POSITIVE_INFINITY,
     },
     label: {
       text: label,
@@ -88,7 +87,6 @@ export function placeOriginMarker(lat: number, lon: number, label: string): void
       outlineColor: Color.BLACK,
       verticalOrigin: VerticalOrigin.BOTTOM,
       pixelOffset: new Cartesian2(0, -18),
-      disableDepthTestDistance: Number.POSITIVE_INFINITY,
     },
   });
 }
@@ -101,7 +99,6 @@ export function placeAntipodeMarker(lat: number, lon: number, label: string): vo
       color: Color.ORANGERED,
       outlineColor: Color.WHITE,
       outlineWidth: 2,
-      disableDepthTestDistance: Number.POSITIVE_INFINITY,
     },
     label: {
       text: label,
@@ -112,7 +109,6 @@ export function placeAntipodeMarker(lat: number, lon: number, label: string): vo
       outlineColor: Color.BLACK,
       verticalOrigin: VerticalOrigin.BOTTOM,
       pixelOffset: new Cartesian2(0, -18),
-      disableDepthTestDistance: Number.POSITIVE_INFINITY,
     },
   });
 }
@@ -172,6 +168,14 @@ export function setView(lat: number, lon: number, height: number = 20_000_000): 
   viewer.camera.setView({
     destination: Cartesian3.fromDegrees(lon, lat, height),
   });
+}
+
+export function zoomIn(): void {
+  viewer.camera.zoomIn(viewer.camera.positionCartographic.height * 0.4);
+}
+
+export function zoomOut(): void {
+  viewer.camera.zoomOut(viewer.camera.positionCartographic.height * 0.6);
 }
 
 export function onGlobeClick(
