@@ -1,6 +1,6 @@
 import './style.css';
-import { initGlobe, clearMarkers, placeOriginMarker, placeAntipodeMarker, drawArc, flyAlongArc, setView, onGlobeClick, zoomIn, zoomOut, toggleLayer } from './globe';
-import { getAntipode } from './antipode';
+import { initGlobe, clearMarkers, placeOriginMarker, placeAntipodeMarker, drawArc, flyAlongArc, flyTo, getCameraPosition, setView, onGlobeClick, zoomIn, zoomOut, toggleLayer } from './globe';
+import { getAntipode, surfaceDistance } from './antipode';
 import { searchLocation, reverseGeocode, debounce } from './geocoding';
 import { getIPLocation, getCurrentLocation } from './geolocation';
 import { updateInfoPanel, showSearchResults, hideSearchResults, showLoading } from './ui';
@@ -58,7 +58,21 @@ async function handleLocation(lat: number, lon: number, name?: string): Promise<
       },
       (targetLat, targetLon) => {
         const toOrigin = Math.abs(targetLat - lat) < 0.01 && Math.abs(targetLon - lon) < 0.01;
-        return flyAlongArc(8_000_000, toOrigin);
+        // The "far end" of the arc is the opposite endpoint from the destination.
+        // If camera is near that far end, fly along the drawn arc for the nice
+        // visualisation. Otherwise fly directly via the shortest great-circle path.
+        const arcFarEnd = toOrigin
+          ? { lat: antipode.lat, lon: antipode.lon }
+          : { lat, lon };
+        const camera = getCameraPosition();
+        const distToFarEnd = surfaceDistance(camera, arcFarEnd);
+        // ~5 000 km ≈ 45° of arc — close enough to the "far end" to make the
+        // arc animation meaningful; otherwise prefer a direct flight.
+        const ARC_PROXIMITY_THRESHOLD_KM = 5000;
+        if (distToFarEnd < ARC_PROXIMITY_THRESHOLD_KM) {
+          return flyAlongArc(8_000_000, toOrigin);
+        }
+        return flyTo(targetLat, targetLon, 8_000_000);
       },
     );
 

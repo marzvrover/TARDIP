@@ -278,6 +278,14 @@ export async function flyTo(
 
 
 
+export function getCameraPosition(): { lat: number; lon: number } {
+  const cartographic = viewer.camera.positionCartographic;
+  return {
+    lat: CesiumMath.toDegrees(cartographic.latitude),
+    lon: CesiumMath.toDegrees(cartographic.longitude),
+  };
+}
+
 export function setView(lat: number, lon: number, height: number = 20_000_000): void {
   viewer.camera.setView({
     destination: Cartesian3.fromDegrees(lon, lat, height),
