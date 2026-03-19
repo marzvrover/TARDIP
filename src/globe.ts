@@ -148,23 +148,20 @@ function slerp(a: Cartesian3, b: Cartesian3, t: number): Cartesian3 {
   return result;
 }
 
-export function drawArc(
-  fromLat: number,
-  fromLon: number,
-  toLat: number,
-  toLon: number,
-): void {
-  const positions: Cartesian3[] = [];
-  const steps = 200;
-  const maxAlt = 2_500_000;
+// Shared arc path — computed once, used by both drawArc and flyAlongArc
+let lastArcPath: { lat: number; lon: number }[] = [];
 
+function computeArcPath(
+  fromLat: number, fromLon: number,
+  toLat: number, toLon: number,
+  steps: number = 200,
+): { lat: number; lon: number }[] {
   const fromCart = latLonToUnitCart(CesiumMath.toRadians(fromLat), CesiumMath.toRadians(fromLon));
   const toCart = latLonToUnitCart(CesiumMath.toRadians(toLat), CesiumMath.toRadians(toLon));
 
   const dot = Math.max(-1, Math.min(1, Cartesian3.dot(fromCart, toCart)));
   const isAntipodal = dot < -0.999;
 
-  // For nearly-antipodal points, pick a midpoint to define which great circle to follow
   let midCart: Cartesian3 | null = null;
   if (isAntipodal) {
     let dLon = toLon - fromLon;
@@ -186,10 +183,10 @@ export function drawArc(
     }
   }
 
+  const path: { lat: number; lon: number }[] = [];
   for (let i = 0; i <= steps; i++) {
     const t = i / steps;
     let point: Cartesian3;
-
     if (isAntipodal && midCart) {
       point = t <= 0.5
         ? slerp(fromCart, midCart, t * 2)
@@ -197,12 +194,25 @@ export function drawArc(
     } else {
       point = slerp(fromCart, toCart, t);
     }
-
-    const latDeg = CesiumMath.toDegrees(Math.asin(point.z));
-    const lonDeg = CesiumMath.toDegrees(Math.atan2(point.y, point.x));
-    const alt = maxAlt * Math.sin(Math.PI * t);
-    positions.push(Cartesian3.fromDegrees(lonDeg, latDeg, alt));
+    path.push({
+      lat: CesiumMath.toDegrees(Math.asin(point.z)),
+      lon: CesiumMath.toDegrees(Math.atan2(point.y, point.x)),
+    });
   }
+  return path;
+}
+
+export function drawArc(
+  fromLat: number, fromLon: number,
+  toLat: number, toLon: number,
+): void {
+  lastArcPath = computeArcPath(fromLat, fromLon, toLat, toLon);
+  const maxAlt = 2_500_000;
+  const count = lastArcPath.length;
+  const positions = lastArcPath.map((wp, i) => {
+    const t = i / (count - 1);
+    return Cartesian3.fromDegrees(wp.lon, wp.lat, maxAlt * Math.sin(Math.PI * t));
+  });
 
   arcEntity = viewer.entities.add({
     polyline: {
@@ -216,63 +226,25 @@ export function drawArc(
   });
 }
 
-export function flyAlongArc(
-  fromLat: number,
-  fromLon: number,
-  toLat: number,
-  toLon: number,
-  height: number = 8_000_000,
-): Promise<void> {
+export function flyAlongArc(height: number = 8_000_000): Promise<void> {
+  if (!lastArcPath.length) return Promise.resolve();
+
   return new Promise<void>((resolve) => {
-    const fromCart = latLonToUnitCart(CesiumMath.toRadians(fromLat), CesiumMath.toRadians(fromLon));
-    const toCart = latLonToUnitCart(CesiumMath.toRadians(toLat), CesiumMath.toRadians(toLon));
-
-    const dot = Math.max(-1, Math.min(1, Cartesian3.dot(fromCart, toCart)));
-    const isAntipodal = dot < -0.999;
-
-    let midCart: Cartesian3 | null = null;
-    if (isAntipodal) {
-      let dLon = toLon - fromLon;
-      if (dLon > 180) dLon -= 360;
-      if (dLon < -180) dLon += 360;
-      const midLon = fromLon + dLon / 2;
-      const candidate = latLonToUnitCart(0, CesiumMath.toRadians(midLon));
-      const cross = Cartesian3.cross(fromCart, candidate, new Cartesian3());
-      if (Cartesian3.magnitude(cross) > 0.01) {
-        Cartesian3.normalize(candidate, candidate);
-        midCart = candidate;
-      } else {
-        const perp = Cartesian3.cross(fromCart, Cartesian3.UNIT_Z, new Cartesian3());
-        if (Cartesian3.magnitude(perp) < 0.01) {
-          Cartesian3.cross(fromCart, Cartesian3.UNIT_X, perp);
-        }
-        Cartesian3.normalize(perp, perp);
-        midCart = perp;
-      }
-    }
-
-    function arcPoint(t: number): Cartesian3 {
-      if (isAntipodal && midCart) {
-        return t <= 0.5
-          ? slerp(fromCart, midCart, t * 2)
-          : slerp(midCart, toCart, (t - 0.5) * 2);
-      }
-      return slerp(fromCart, toCart, t);
-    }
-
+    const waypoints = lastArcPath;
+    const count = waypoints.length;
     const durationMs = 3000;
     const maxHeight = Math.max(height * 2.5, 15_000_000);
     const startTime = performance.now();
 
     function tick() {
       const raw = Math.min((performance.now() - startTime) / durationMs, 1);
+      // Cubic ease-in-out
       const t = raw < 0.5
         ? 4 * raw * raw * raw
         : 1 - Math.pow(-2 * raw + 2, 3) / 2;
 
-      const pt = arcPoint(t);
-      const lat = CesiumMath.toDegrees(Math.asin(pt.z));
-      const lon = CesiumMath.toDegrees(Math.atan2(pt.y, pt.x));
+      const idx = Math.min(Math.round(t * (count - 1)), count - 1);
+      const { lat, lon } = waypoints[idx];
       const h = height + (maxHeight - height) * Math.sin(Math.PI * t);
 
       viewer.camera.setView({

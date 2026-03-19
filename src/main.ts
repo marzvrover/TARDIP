@@ -59,7 +59,7 @@ async function handleLocation(lat: number, lon: number, name?: string): Promise<
       (lat, lon) => flyTo(lat, lon, 8_000_000),
     );
 
-    await flyAlongArc(lat, lon, antipode.lat, antipode.lon, 8_000_000);
+    await flyAlongArc(8_000_000);
   } finally {
     busy = false;
     showLoading(false);
