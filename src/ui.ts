@@ -29,11 +29,15 @@ export function updateInfoPanel(
 
   const summary = document.getElementById('info-summary')!;
   summary.innerHTML = `
-    <span class="dot origin-dot"></span>
-    <span class="summary-name">${escapeHtml(originShort)}</span>
+    <span class="summary-item" data-lat="${data.origin.lat}" data-lon="${data.origin.lon}">
+      <span class="dot origin-dot"></span>
+      <span class="summary-name">${escapeHtml(originShort)}</span>
+    </span>
     <span class="summary-arrow">↔</span>
-    <span class="dot antipode-dot"></span>
-    <span class="summary-name">${escapeHtml(antipodeShort)}</span>
+    <span class="summary-item" data-lat="${data.antipode.lat}" data-lon="${data.antipode.lon}">
+      <span class="dot antipode-dot"></span>
+      <span class="summary-name">${escapeHtml(antipodeShort)}</span>
+    </span>
   `;
 
   content.innerHTML = `
@@ -65,6 +69,13 @@ export function updateInfoPanel(
 
   if (onFlyTo) {
     content.querySelectorAll('.location-section.clickable').forEach((el) => {
+      el.addEventListener('click', () => {
+        const lat = parseFloat((el as HTMLElement).dataset.lat || '0');
+        const lon = parseFloat((el as HTMLElement).dataset.lon || '0');
+        onFlyTo(lat, lon);
+      });
+    });
+    summary.querySelectorAll('.summary-item').forEach((el) => {
       el.addEventListener('click', () => {
         const lat = parseFloat((el as HTMLElement).dataset.lat || '0');
         const lon = parseFloat((el as HTMLElement).dataset.lon || '0');

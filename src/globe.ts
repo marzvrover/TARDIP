@@ -171,6 +171,30 @@ export async function flyTo(
   });
 }
 
+export async function flyAlongArc(
+  fromLat: number,
+  fromLon: number,
+  toLat: number,
+  toLon: number,
+  height: number = 8_000_000,
+): Promise<void> {
+  // Compute midpoint using the same shortest-longitude logic as drawArc
+  let dLon = toLon - fromLon;
+  if (dLon > 180) dLon -= 360;
+  if (dLon < -180) dLon += 360;
+
+  const midLat = (fromLat + toLat) / 2;
+  let midLon = fromLon + dLon / 2;
+  if (midLon > 180) midLon -= 360;
+  if (midLon < -180) midLon += 360;
+
+  // Fly: zoom out over origin → mid-arc waypoint → destination
+  await flyTo(fromLat, fromLon, 20_000_000);
+  await new Promise<void>((r) => setTimeout(r, 400));
+  await flyTo(midLat, midLon, 20_000_000);
+  await flyTo(toLat, toLon, height);
+}
+
 export function setView(lat: number, lon: number, height: number = 20_000_000): void {
   viewer.camera.setView({
     destination: Cartesian3.fromDegrees(lon, lat, height),

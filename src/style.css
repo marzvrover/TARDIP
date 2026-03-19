@@ -203,11 +203,21 @@ body {
 }
 
 #info-panel.collapsed #info-panel-toggle {
+  position: static;
+  flex-shrink: 0;
+  margin-left: auto;
   transform: rotate(180deg);
 }
 
-#info-panel.collapsed #info-content {
-  display: none;
+#info-panel.collapsed {
+  padding: 10px 16px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+#info-panel.collapsed.visible {
+  display: flex;
 }
 
 #info-summary {
@@ -219,6 +229,25 @@ body {
 
 #info-panel.collapsed #info-summary {
   display: flex;
+}
+
+#info-panel.collapsed #info-content {
+  display: none;
+}
+
+.summary-item {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  cursor: pointer;
+  border-radius: 4px;
+  padding: 2px 4px;
+  margin: -2px -4px;
+  transition: background 0.15s;
+}
+
+.summary-item:hover {
+  background: rgba(255, 255, 255, 0.1);
 }
 
 .summary-name {
