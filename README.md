@@ -1,8 +1,9 @@
-# TARDIP
-
-**Terrestrial Antipodal Reflection & Diametric Inversion Point**
+# TARDIP: Terrestrial Antipodal Reflection & Diametric Inversion Point
 
 A 3D globe webapp that lets you explore antipodal points on Earth — the spot diametrically opposite to any location, straight through the planet's core.
+
+> [!Warning]
+> This project is a vibe coding experiment. Copilot has built 100% of the code in this repo.
 
 ## Features
 
