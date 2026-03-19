@@ -226,11 +226,11 @@ export function drawArc(
   });
 }
 
-export function flyAlongArc(height: number = 8_000_000): Promise<void> {
+export function flyAlongArc(height: number = 8_000_000, reverse: boolean = false): Promise<void> {
   if (!lastArcPath.length) return Promise.resolve();
 
   return new Promise<void>((resolve) => {
-    const waypoints = lastArcPath;
+    const waypoints = reverse ? [...lastArcPath].reverse() : lastArcPath;
     const count = waypoints.length;
     const durationMs = 3000;
     const maxHeight = Math.max(height * 2.5, 15_000_000);
