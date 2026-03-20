@@ -22,15 +22,48 @@ export function getBrowserLocation(): Promise<GeoPosition> {
   });
 }
 
+async function fetchWithTimeout(url: string, timeoutMs: number): Promise<Response> {
+  const controller = new AbortController();
+  const id = setTimeout(() => controller.abort(), timeoutMs);
+  try {
+    return await fetch(url, { signal: controller.signal });
+  } finally {
+    clearTimeout(id);
+  }
+}
+
+function parseLatLon(d: Record<string, unknown>): GeoPosition {
+  return { lat: d.latitude as number, lon: d.longitude as number };
+}
+
 export async function getIPLocation(): Promise<GeoPosition> {
-  const response = await fetch('https://ipapi.co/json/');
-  if (!response.ok) throw new Error('IP geolocation failed');
-  const data = await response.json();
-  if (!data.latitude || !data.longitude) throw new Error('No coordinates in IP response');
-  return {
-    lat: data.latitude,
-    lon: data.longitude,
-  };
+  // Try primary service first, then fall back to a secondary one.
+  // A 5-second timeout prevents indefinite hangs when a service is
+  // blocked by iOS Safari's Intelligent Tracking Prevention (ITP).
+  const services = [
+    {
+      url: 'https://ipapi.co/json/',
+      check: (d: Record<string, unknown>) => d.latitude != null && d.longitude != null,
+    },
+    {
+      url: 'https://ipwho.is/',
+      check: (d: Record<string, unknown>) => d.success === true && d.latitude != null && d.longitude != null,
+    },
+  ];
+
+  let lastError: unknown;
+  for (const service of services) {
+    try {
+      const response = await fetchWithTimeout(service.url, 5000);
+      if (!response.ok) throw new Error('IP geolocation failed');
+      const data = (await response.json()) as Record<string, unknown>;
+      if (!service.check(data)) throw new Error('No coordinates in IP response');
+      return parseLatLon(data);
+    } catch (err) {
+      lastError = err;
+    }
+  }
+  throw lastError ?? new Error('IP geolocation failed');
 }
 
 export async function getCurrentLocation(): Promise<GeoPosition> {
